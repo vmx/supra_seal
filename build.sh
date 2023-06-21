@@ -17,100 +17,13 @@ CC=${CC:-cc}
 CXX=${CXX:-c++}
 NVCC=${NVCC:-nvcc}
 
-CUDA=$(dirname $(dirname $(which $NVCC)))
-SPDK="deps/spdk-v22.09"
 CUDA_ARCH="-arch=sm_80 -gencode arch=compute_70,code=sm_70 -t0"
 CXXSTD=`$CXX -dM -E -x c++ /dev/null | \
         awk '{ if($2=="__cplusplus" && $3<"2017") print "-std=c++17"; }'`
 
-INCLUDE="-I$SPDK/include -I$SPDK/isa-l/.. -I$SPDK/dpdk/build/include"
-CFLAGS="$SECTOR_SIZE $INCLUDE -g -O2"
-CXXFLAGS="$CFLAGS -march=native $CXXSTD \
-          -fPIC -fno-omit-frame-pointer -fno-strict-aliasing \
-          -fstack-protector -fno-common \
-          -D_GNU_SOURCE -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=2 \
-          -DSPDK_GIT_COMMIT=4be6d3043 -pthread \
-          -Wall -Wextra -Wno-unused-variable -Wno-unused-parameter -Wno-missing-field-initializers \
-          -Wformat -Wformat-security"
-
-LDFLAGS="-fno-omit-frame-pointer -Wl,-z,relro,-z,now -Wl,-z,noexecstack -fuse-ld=bfd\
-         -L$SPDK/build/lib \
-         -Wl,--whole-archive -Wl,--no-as-needed \
-         -lspdk_bdev_malloc \
-         -lspdk_bdev_null \
-         -lspdk_bdev_nvme \
-         -lspdk_bdev_passthru \
-         -lspdk_bdev_lvol \
-         -lspdk_bdev_raid \
-         -lspdk_bdev_error \
-         -lspdk_bdev_gpt \
-         -lspdk_bdev_split \
-         -lspdk_bdev_delay \
-         -lspdk_bdev_zone_block \
-         -lspdk_blobfs_bdev \
-         -lspdk_blobfs \
-         -lspdk_blob_bdev \
-         -lspdk_lvol \
-         -lspdk_blob \
-         -lspdk_nvme \
-         -lspdk_bdev_ftl \
-         -lspdk_ftl \
-         -lspdk_bdev_aio \
-         -lspdk_bdev_virtio \
-         -lspdk_virtio \
-         -lspdk_vfio_user \
-         -lspdk_accel_ioat \
-         -lspdk_ioat \
-         -lspdk_scheduler_dynamic \
-         -lspdk_env_dpdk \
-         -lspdk_scheduler_dpdk_governor \
-         -lspdk_scheduler_gscheduler \
-         -lspdk_sock_posix \
-         -lspdk_event \
-         -lspdk_event_bdev \
-         -lspdk_bdev \
-         -lspdk_notify \
-         -lspdk_dma \
-         -lspdk_event_accel \
-         -lspdk_accel \
-         -lspdk_event_vmd \
-         -lspdk_vmd \
-         -lspdk_event_sock \
-         -lspdk_init \
-         -lspdk_thread \
-         -lspdk_trace \
-         -lspdk_sock \
-         -lspdk_rpc \
-         -lspdk_jsonrpc \
-         -lspdk_json \
-         -lspdk_util \
-         -lspdk_log \
-         -Wl,--no-whole-archive $SPDK/build/lib/libspdk_env_dpdk.a \
-         -Wl,--whole-archive $SPDK/dpdk/build/lib/librte_bus_pci.a \
-         $SPDK/dpdk/build/lib/librte_cryptodev.a \
-         $SPDK/dpdk/build/lib/librte_dmadev.a \
-         $SPDK/dpdk/build/lib/librte_eal.a \
-         $SPDK/dpdk/build/lib/librte_ethdev.a \
-         $SPDK/dpdk/build/lib/librte_hash.a \
-         $SPDK/dpdk/build/lib/librte_kvargs.a \
-         $SPDK/dpdk/build/lib/librte_mbuf.a \
-         $SPDK/dpdk/build/lib/librte_mempool.a \
-         $SPDK/dpdk/build/lib/librte_mempool_ring.a \
-         $SPDK/dpdk/build/lib/librte_net.a \
-         $SPDK/dpdk/build/lib/librte_pci.a \
-         $SPDK/dpdk/build/lib/librte_power.a \
-         $SPDK/dpdk/build/lib/librte_rcu.a \
-         $SPDK/dpdk/build/lib/librte_ring.a \
-         $SPDK/dpdk/build/lib/librte_telemetry.a \
-         $SPDK/dpdk/build/lib/librte_vhost.a \
-         -Wl,--no-whole-archive \
-         -lnuma -ldl \
-         -L$SPDK/isa-l/.libs -lisal \
-         -pthread -lrt -luuid -lssl -lcrypto -lm -laio"
-
 # Check for the default result directory
-if [ ! -d "/var/tmp/supra_seal" ]; then
-    mkdir -p /var/tmp/supra_seal
+if [ ! -d "/tmp/supra_seal" ]; then
+    mkdir -p /tmp/supra_seal
 fi
 
 rm -fr obj
@@ -120,13 +33,6 @@ rm -fr bin
 mkdir -p bin
 
 mkdir -p deps
-if [ ! -d $SPDK ]; then
-    git clone --branch v22.09 https://github.com/spdk/spdk --recursive $SPDK
-    (cd $SPDK
-     sudo scripts/pkgdep.sh
-     ./configure --with-virtio --with-vhost
-     make -j 10)
-fi
 if [ ! -d "deps/sppark" ]; then
     git clone https://github.com/supranational/sppark.git deps/sppark
 fi
@@ -135,8 +41,6 @@ if [ ! -d "deps/blst" ]; then
     (cd deps/blst
      ./build.sh -march=native)
 fi
-
-$CC -c sha/sha_ext_mbx2.S -o obj/sha_ext_mbx2.o
 
 # Generate .h files for the Poseidon constants
 xxd -i poseidon/constants/constants_2  > obj/constants_2.h
@@ -147,39 +51,11 @@ xxd -i poseidon/constants/constants_16 > obj/constants_16.h
 xxd -i poseidon/constants/constants_24 > obj/constants_24.h
 xxd -i poseidon/constants/constants_36 > obj/constants_36.h
 
-# PC1
-$CXX $CXXFLAGS -Ideps/sppark/util -o obj/pc1.o -c pc1/pc1.cpp &
-
-# PC2
-$CXX $CXXFLAGS -o obj/streaming_node_reader_nvme.o -c nvme/streaming_node_reader_nvme.cpp &
-$CXX $CXXFLAGS -o obj/ring_t.o -c nvme/ring_t.cpp &
-$NVCC $CFLAGS $CUDA_ARCH -std=c++17 -DNO_SPDK -Xcompiler -march=native \
-      -Xcompiler -Wall,-Wextra,-Wno-subobject-linkage,-Wno-unused-parameter \
-      -Ideps/sppark -Ideps/sppark/util -Ideps/blst/src -c pc2/cuda/pc2.cu -o obj/pc2.o &
-
-$CXX $CXXFLAGS $INCLUDE -Iposeidon -Ideps/sppark -Ideps/sppark/util -Ideps/blst/src \
-    -c sealing/supra_seal.cpp -o obj/supra_seal.o -Wno-subobject-linkage &
-
-wait
-
-ar rvs obj/libsupraseal.a \
-   obj/pc1.o \
-   obj/pc2.o \
-   obj/ring_t.o \
-   obj/streaming_node_reader_nvme.o \
-   obj/supra_seal.o \
-   obj/sha_ext_mbx2.o
-
-$CXX $CXXFLAGS -Ideps/sppark -Ideps/sppark/util -Ideps/blst/src \
-    -o bin/seal demos/main.cpp \
-    -Lobj -lsupraseal \
-    $LDFLAGS -Ldeps/blst -lblst -L$CUDA/lib64 -lcudart_static -lgmp -lconfig++ &
-
 # tree-r CPU only
 $CXX $SECTOR_SIZE $CXXSTD -pthread -g -O3 -march=native \
     -Wall -Wextra -Werror -Wno-subobject-linkage \
     tools/tree_r.cpp poseidon/poseidon.cpp \
-    -o bin/tree_r_cpu -Iposeidon -Ideps/sppark -Ideps/blst/src -L deps/blst -lblst &
+    -o bin/tree_r_cpu -Iposeidon -Ideps/sppark -Ideps/blst/src -L deps/blst -lblst
 
 # tree-r CPU + GPU
 $NVCC $SECTOR_SIZE -DNO_SPDK -DSTREAMING_NODE_READER_FILES \
@@ -187,7 +63,7 @@ $NVCC $SECTOR_SIZE -DNO_SPDK -DSTREAMING_NODE_READER_FILES \
      -Xcompiler -Wall,-Wextra,-Werror \
      -Xcompiler -Wno-subobject-linkage,-Wno-unused-parameter \
      -x cu tools/tree_r.cpp -o bin/tree_r \
-     -Iposeidon -Ideps/sppark -Ideps/sppark/util -Ideps/blst/src -L deps/blst -lblst -lconfig++ &
+     -Iposeidon -Ideps/sppark -Ideps/sppark/util -Ideps/blst/src -L deps/blst -lblst -lconfig++
 
 # Standalone GPU pc2
 $NVCC $SECTOR_SIZE -DNO_SPDK -DSTREAMING_NODE_READER_FILES \
@@ -195,7 +71,7 @@ $NVCC $SECTOR_SIZE -DNO_SPDK -DSTREAMING_NODE_READER_FILES \
      -Xcompiler -Wall,-Wextra,-Werror \
      -Xcompiler -Wno-subobject-linkage,-Wno-unused-parameter \
      -x cu tools/tree_r.cpp -o bin/tree_r \
-     -Iposeidon -Ideps/sppark -Ideps/sppark/util -Ideps/blst/src -L deps/blst -lblst -lconfig++ &
+     -Iposeidon -Ideps/sppark -Ideps/sppark/util -Ideps/blst/src -L deps/blst -lblst -lconfig++
 
 # Standalone GPU pc2
 $NVCC $SECTOR_SIZE -DNO_SPDK -DSTREAMING_NODE_READER_FILES \
@@ -203,6 +79,4 @@ $NVCC $SECTOR_SIZE -DNO_SPDK -DSTREAMING_NODE_READER_FILES \
      -Xcompiler -Wall,-Wextra,-Werror \
      -Xcompiler -Wno-subobject-linkage,-Wno-unused-parameter \
      -x cu tools/pc2.cu -o bin/pc2 \
-     -Iposeidon -Ideps/sppark -Ideps/sppark/util -Ideps/blst/src -L deps/blst -lblst -lconfig++ &
-
-wait
+     -Iposeidon -Ideps/sppark -Ideps/sppark/util -Ideps/blst/src -L deps/blst -lblst -lconfig++
