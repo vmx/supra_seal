@@ -3,7 +3,7 @@
 // This is a basic demonstration of the sealing pipeline, the bindings
 // interface and order of operations from a rust perspective
 
-#![feature(vec_into_raw_parts)]
+//#![feature(vec_into_raw_parts)]
 
 use filecoin_proofs_api::RegisteredSealProof;
 use filecoin_proofs_v1::{

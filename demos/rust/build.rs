@@ -21,8 +21,16 @@ fn main() {
         .canonicalize()
         .expect("cannot canonicalize path");
 
+    // Use the first directory that was found.
+    let cuda_lib_dir = find_cuda_helper::find_cuda_lib_dirs()
+        .first()
+        .expect("CUDA not found")
+        .canonicalize()
+        .expect("cannot canonicalize path");
+
     println!("cargo:rustc-link-search={}", cpp_lib_dir.to_str().unwrap());
     println!("cargo:rustc-link-search={}", spdk_lib_dir);
+    println!("cargo:rustc-link-search={}", cuda_lib_dir.to_str().unwrap());
 
     println!("cargo:rustc-link-arg=-fno-omit-frame-pointer");
     println!("cargo:rustc-link-arg=-Wl,-z,relro,-z,now");
@@ -113,6 +121,7 @@ fn main() {
     println!("cargo:rustc-link-arg=-laio");
     println!("cargo:rustc-link-arg=-lc");
     println!("cargo:rustc-link-arg=-lgcc");
+    println!("cargo:rustc-link-arg=-lcudart_static");
 
     println!("cargo:rustc-link-lib=supraseal");
     println!("cargo:rustc-link-lib=gmp");
