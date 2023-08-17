@@ -21,16 +21,22 @@ fn main() {
         .canonicalize()
         .expect("cannot canonicalize path");
 
-    // Use the first directory that was found.
-    let cuda_lib_dir = find_cuda_helper::find_cuda_lib_dirs()
-        .first()
-        .expect("CUDA not found")
-        .canonicalize()
-        .expect("cannot canonicalize path");
-
+    //// TODO vmx 2023-08-17: There is some other way, see how sppark or blstrs is integrating blst.
+    //let blst_lib_dir = PathBuf::from("../../deps/blst")
+    //    .canonicalize()
+    //    .expect("cannot canonicalize path");
+    //
+    //// Use the first directory that was found.
+    //let cuda_lib_dir = find_cuda_helper::find_cuda_lib_dirs()
+    //    .first()
+    //    .expect("CUDA not found")
+    //    .canonicalize()
+    //    .expect("cannot canonicalize path");
+    //
     println!("cargo:rustc-link-search={}", cpp_lib_dir.to_str().unwrap());
     println!("cargo:rustc-link-search={}", spdk_lib_dir);
-    println!("cargo:rustc-link-search={}", cuda_lib_dir.to_str().unwrap());
+    //println!("cargo:rustc-link-search={}", blst_lib_dir.to_str().unwrap());
+    //println!("cargo:rustc-link-search={}", cuda_lib_dir.to_str().unwrap());
 
     println!("cargo:rustc-link-arg=-fno-omit-frame-pointer");
     println!("cargo:rustc-link-arg=-Wl,-z,relro,-z,now");
@@ -99,7 +105,10 @@ fn main() {
     println!("cargo:rustc-link-arg={}/librte_kvargs.a", dpdk_lib_dir);
     println!("cargo:rustc-link-arg={}/librte_mbuf.a", dpdk_lib_dir);
     println!("cargo:rustc-link-arg={}/librte_mempool.a", dpdk_lib_dir);
-    println!("cargo:rustc-link-arg={}/librte_mempool_ring.a", dpdk_lib_dir);
+    println!(
+        "cargo:rustc-link-arg={}/librte_mempool_ring.a",
+        dpdk_lib_dir
+    );
     println!("cargo:rustc-link-arg={}/librte_net.a", dpdk_lib_dir);
     println!("cargo:rustc-link-arg={}/librte_pci.a", dpdk_lib_dir);
     println!("cargo:rustc-link-arg={}/librte_power.a", dpdk_lib_dir);
@@ -121,13 +130,13 @@ fn main() {
     println!("cargo:rustc-link-arg=-laio");
     println!("cargo:rustc-link-arg=-lc");
     println!("cargo:rustc-link-arg=-lgcc");
+    println!("cargo:rustc-link-arg=-lblst");
     println!("cargo:rustc-link-arg=-lcudart_static");
 
     println!("cargo:rustc-link-lib=supraseal");
     println!("cargo:rustc-link-lib=gmp");
     println!("cargo:rustc-link-lib=config++");
-    println!("cargo:rustc-link-lib=static:-bundle=stdc++");
+    println!("cargo:rustc-link-lib=stdc++");
 
     println!("cargo:rerun-if-changed={}", cpp_lib_dir.to_str().unwrap());
-
 }

@@ -3,25 +3,19 @@ name = "supra-seal-demo"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-#[[bin]]
-#name = "c2"
-#path = "src/c2.rs"
-
-[features]
-default = ["32GiB"]
-512MiB = []
-32GiB = []
-
 [dependencies]
 anyhow = "1.0.26"
 bincode = "1.1.2"
+# `blst` is not used from Rust directly, but it's needed as it will make sure the library is
+# available for being linked.
+blst = "0.3.11"
 chrono = "0.4"
-filecoin-proofs-api = {version = "15.0.0", default-features = false }
-filecoin-proofs-v1 = { package = "filecoin-proofs", version = "15.0.0", default-features = false }
-storage-proofs-core = { version = "15.0.0", default-features = false }
-#supraseal-c2 = { path = "../../c2/" }
+fil_logger = "0.1.7"
+hex = "0.4.3"
+log = "0.4.20"
+serde = { version = "1.0.183", features = ["derive"] }
+serde-hex = "0.1.0"
+serde_json = "1.0.105"
 
 [build-dependencies]
 find_cuda_helper = "0.2.0"
@@ -30,6 +24,3 @@ find_cuda_helper = "0.2.0"
 sha2 = { version = "0.10.2", features = ["compress", "asm"] }
 [target."cfg(not(target_arch = \"aarch64\"))".dependencies]
 sha2 = { version = "0.10.2", features = ["compress"] }
-
-[patch.crates-io]
-blst = { git = "https://github.com/supranational/blst" }
