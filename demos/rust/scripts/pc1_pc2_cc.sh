@@ -69,6 +69,6 @@ if [ "${supraseal_config_path}" = 'null' ]; then
     echo "'supraseal_config_path' not set." && exit 6
 fi
 
-# Run PC1.
-pc1=$(${JO} parents_cache_path="${parents_cache_path}" replica_ids=$(jo -a -- ${replica_ids}) -s supraseal_config_path="$supraseal_config_path" | ${CARGO} --bin pc1)
->&2 echo "PC1: ${pc1}"
+# Run SDR.
+sdr=$(${JO} parents_cache_path="${parents_cache_path}" replica_ids=$(jo -a -- ${replica_ids}) -s supraseal_config_path="$supraseal_config_path" | ${CARGO} --bin sdr)
+>&2 echo "SDR: ${sdr}"

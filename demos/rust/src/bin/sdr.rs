@@ -18,7 +18,7 @@ impl fmt::Debug for Bytes {
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-struct Pc1Parameters {
+struct SdrParameters {
     /// Path to the parents cache file matching the sector size it was compiled for.
     parents_cache_path: String,
     /// A list of Replica IDs. The amount of Replica IDs determine how many sectors are sealed in
@@ -29,7 +29,7 @@ struct Pc1Parameters {
 }
 
 #[derive(Debug, Default, Deserialize, Serialize)]
-struct Pc1Output {
+struct SdrOutput {
     // This is a hack to serialize a struct into an empty Object instead of null
     #[serde(skip_serializing)]
     _placeholder: (),
@@ -43,7 +43,7 @@ const BLOCK_OFFSET: usize = 0;
 fn main() -> Result<()> {
     fil_logger::maybe_init();
 
-    let params: Pc1Parameters = cli::parse_stdin()?;
+    let params: SdrParameters = cli::parse_stdin()?;
     info!("{:?}", params);
 
     let replica_ids = params
@@ -61,7 +61,7 @@ fn main() -> Result<()> {
         params.parents_cache_path,
     );
 
-    let output = Pc1Output::default();
+    let output = SdrOutput::default();
     cli::print_stdout(output)?;
 
     Ok(())
