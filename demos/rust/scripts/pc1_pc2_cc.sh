@@ -77,10 +77,8 @@ if [ "${supraseal_config_path}" = 'null' ]; then
 fi
 
 # Run SDR.
-sdr=$(${JO} -s parents_cache_path="${parents_cache_path}" replica_ids=$(jo -a -- ${replica_ids}) -s supraseal_config_path="$supraseal_config_path" | ${CARGO} --bin sdr)
->&2 echo "SDR: ${sdr}"
+# shellcheck disable=SC2086 # replica_ids should be split.
+${JO} -s parents_cache_path="${parents_cache_path}" replica_ids="$(jo -a -- ${replica_ids})" -s supraseal_config_path="${supraseal_config_path}" | ${CARGO} --bin sdr
 
-# Run TreeC.
-tree_c=$(${JO} num_sectors="${num_sectors}" -s output_dir="${output_dir}" -s supraseal_config_path="$supraseal_config_path" | ${CARGO} --bin tree-c)
->&2 echo "TreeC: ${tree_c}"
-
+# Run PC2.
+${JO} num_sectors="${num_sectors}" -s output_dir="${output_dir}" -s supraseal_config_path="$supraseal_config_path" | ${CARGO} --bin pc2-cc
