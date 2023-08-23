@@ -37,9 +37,10 @@ Running on AWS
 Server requirements:
  - Nvidia GPU (e.g. Tesla T4)
  - CPU with SHA extension (e.g. AMD EPYC)
- - An additional NVMe drive that is not your root filesystem
+ - >= 24GiB RAM
+ - An additional NVMe drive that is not your root filesystem (> 128 GiB)
 
-For the following instructions a [g5.4xlarge] instance was used.
+For the following instructions a [g5.2xlarge] instance was used.
 
 ### Setup the system
 
@@ -82,8 +83,8 @@ Enable huge pages:
 
 ```
 sudo vi /etc/default/grub
-GRUB_CMDLINE_LINUX_DEFAULT="default_hugepagesz=1G hugepagesz=1G hugepages=36"
-GRUB_CMDLINE_LINUX="default_hugepagesz=1G hugepagesz=1G hugepages=36"
+GRUB_CMDLINE_LINUX_DEFAULT="default_hugepagesz=1G hugepagesz=1G hugepages=18"
+GRUB_CMDLINE_LINUX="default_hugepagesz=1G hugepagesz=1G hugepages=18"
 sudo update-grub
 sudo reboot
 ```
@@ -92,8 +93,8 @@ Verify that that hugepages are set correctly:
 
 ```console
 > grep '^Huge' /proc/meminfo
-HugePages_Total:      36
-HugePages_Free:       36
+HugePages_Total:      18
+HugePages_Free:       18
 HugePages_Rsvd:        0
 HugePages_Surp:        0
 Hugepagesize:    1048576 kB
@@ -114,7 +115,7 @@ git fetch vmx && git checkout vmx/binaries
 The next command sets SPDK up, it needs to be run after **every** reboot:
 
 ```
-sudo env NRHUGE=36 ./deps/spdk-v22.09/scripts/setup.sh
+sudo env NRHUGE=18 ./deps/spdk-v22.09/scripts/setup.sh
 ```
 
 If you get an error message like:
@@ -190,7 +191,7 @@ cargo build --release --bins
 Now actually run it for two 512MiB CC sectors:
 
 ```
-echo '{"output_dir": "/tmp/512mib2sec", "parents_cache_path":"/var/tmp/filecoin-parents/v28-sdr-parent-7ba215a1d2345774ab90b8cb1158d296e409d6068819d7b8c7baf0b25d63dc34.cache","replica_ids":["0x8229407e385f82a7dd85c4ff7bc8488deb79e59c39d6a5b5ed9ab5e0762f6d3f","0x516de970419d50c025f57ed6eb1135278aca99d2d2a27017e54bc43580389478"],"supraseal_config_path":"/home/ubuntu/supra_seal/demos/rust/supra_seal.cfg"}'|sudo --preserve-env env PATH="${PATH}" LIBRARY_PATH=/usr/local/cuda-12.0/targets/x86_64-linux/lib /usr/bin/time -v ./scripts/pc1_pc2_cc.sh|ts '[%Y-%m-%d %H:%M:%S]'|tee ../../../pc1pc2_512mibgib2sec_001.log
+echo '{"output_dir": "/tmp/512mib2sec", "parents_cache_path":"/var/tmp/filecoin-parents/v28-sdr-parent-7ba215a1d2345774ab90b8cb1158d296e409d6068819d7b8c7baf0b25d63dc34.cache","replica_ids":["0x8229407e385f82a7dd85c4ff7bc8488deb79e59c39d6a5b5ed9ab5e0762f6d3f","0x516de970419d50c025f57ed6eb1135278aca99d2d2a27017e54bc43580389478"],"supraseal_config_path":"/home/ubuntu/supra_seal/demos/rust/supra_seal.cfg"}'|sudo --preserve-env env PATH="${PATH}" /usr/bin/time -v ./scripts/pc1_pc2_cc.sh|ts '[%Y-%m-%d %H:%M:%S]'|tee ../../../pc1pc2_512mibgib2sec_001.log
 ```
 
 The time it takes depends highly on the performance of your NVMe. You can test your performance via:
@@ -207,4 +208,4 @@ Total                                  :  137788.90     538.24     464.48      5
 The PC1 for two 512MiB sectors needs to read/write about 800GiB. With a performance of about 450MiB/s, it then takes about 30mins.
 
 [scripts/pc1pc2_cc.sh]: ./scripts/pc1_pc2_cc.sh
-[g5.4xlarge]: https://instances.vantage.sh/aws/ec2/g5.4xlarge
+[g5.2xlarge]: https://instances.vantage.sh/aws/ec2/g5.2xlarge
