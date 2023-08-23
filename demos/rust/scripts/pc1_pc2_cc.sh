@@ -76,6 +76,8 @@ if [ "${supraseal_config_path}" = 'null' ]; then
     echo "'supraseal_config_path' not set." && exit 7
 fi
 
+mkdir -p "${output_dir}"
+
 # Run SDR.
 # shellcheck disable=SC2086 # replica_ids should be split.
 ${JO} -s parents_cache_path="${parents_cache_path}" replica_ids="$(jo -a -- ${replica_ids})" -s supraseal_config_path="${supraseal_config_path}" | ${CARGO} --bin sdr
