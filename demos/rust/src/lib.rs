@@ -50,6 +50,7 @@ mod extern_c {
             cache_path: *const c_char,
             parents_filename: *const c_char,
             replica_path: *const c_char,
+            //output_dir: *const c_char,
         ) -> u32;
     }
 }
@@ -119,28 +120,31 @@ pub fn c1<T: AsRef<std::path::Path>>(
     block_offset: usize,
     num_sectors: usize,
     sector_id: usize,
-    replica_id: *const u8,
-    seed: *const u8,
-    ticket: *const u8,
+    replica_id: &[u8; 32],
+    seed: &[u8; 32],
+    ticket: &[u8; 32],
     cache_path: T,
     parents_filename: T,
     replica_path: T,
+    //output_dir: T,
 ) -> u32 {
     let cache_path_c = CString::new(cache_path.as_ref().as_os_str().as_bytes()).unwrap();
     let parents_c = CString::new(parents_filename.as_ref().as_os_str().as_bytes()).unwrap();
     let replica_path_c = CString::new(replica_path.as_ref().as_os_str().as_bytes()).unwrap();
+    //let output_dir_c = CString::new(output_dir.as_ref().as_os_str().as_bytes()).unwrap();
 
     let c1_status = unsafe {
         extern_c::c1(
             block_offset,
             num_sectors,
             sector_id,
-            replica_id,
-            seed,
-            ticket,
+            replica_id.as_ptr(),
+            seed.as_ptr(),
+            ticket.as_ptr(),
             cache_path_c.as_ptr(),
             parents_c.as_ptr(),
             replica_path_c.as_ptr(),
+            //output_dir_c.as_ptr(),
         )
     };
     println!("C1 returned {}", c1_status);
