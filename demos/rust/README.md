@@ -207,5 +207,24 @@ Total                                  :  137788.90     538.24     464.48      5
 
 The PC1 for two 512MiB sectors needs to read/write about 800GiB. With a performance of about 450MiB/s, it then takes about 30mins.
 
+
+### Run c1
+
+The `c1` currently runs for a single sector only, even if the API suggests it can work with multiple. The parameters are just forwarded, hence they might seem a bit strange. Here are the newsworthy ones:
+
+ - `cache_dir`: needs to point to a specific sector, i.e. to the specific sub-directory, e.g. `001`.
+ - `num_sectors`: pass in `2`, it won't work with `1`.
+ - `replica_dir`: the directory where the replica file is. That replica file must be named `sealed-file`.
+ - `sector_slot`: several sectors are sealed in parallel, that is the one to use. So if your `cache_dir` is `001`, then your `sector_slot` is `1`.
+
+The result is a file named `commit-phase1-output` that is stored in the given `cache_dir`.
+
+Example:
+
+```
+echo '{"cache_dir": "/tmp/512mib2sec/001", "num_sectors": 2, "parents_cache_path":"/var/tmp/filecoin-parents/v28-sdr-parent-7ba215a1d2345774ab90b8cb1158d296e409d6068819d7b8c7baf0b25d63dc34.cache","replica_id": "0x8229407e385f82a7dd85c4ff7bc8488deb79e59c39d6a5b5ed9ab5e0762f6d3f", "replica_dir": "/tmp/512mib2sec/001", "sector_slot": 1, "seed": "0x00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff", "supraseal_config_path":"/home/ubuntu/supra_seal/demos/rust/supra_seal.cfg", "ticket": "0x00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff"}'|sudo --preserve-env env PATH="${PATH}" /usr/bin/time -v cargo run --release --bin c1|ts '[%Y-%m-%d %H:%M:%S]'|tee ../../../c1_512mibgib2sec_001.log
+```
+
+
 [scripts/pc1pc2_cc.sh]: ./scripts/pc1_pc2_cc.sh
 [g5.2xlarge]: https://instances.vantage.sh/aws/ec2/g5.2xlarge
